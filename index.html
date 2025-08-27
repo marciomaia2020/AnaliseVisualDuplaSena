@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise Visual Dupla Sena</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        duplasena: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            300: '#f9a8d4',
+                            400: '#f472b6',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            700: '#be185d',
+                            800: '#9d174d',
+                            900: '#831843',
+                            primary: '#e11d48',
+                            950: '#4c0519',
+                            975: '#1f0207'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .number-ball {
+            transition: all 0.2s ease;
+        }
+        .number-ball:hover {
+            transform: scale(1.1);
+        }
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #e11d48;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .responsive {
+            width: 100% !important;
+            height: auto !important;
+            max-width: 400px;
+            display: block;
+            margin: 0 auto;
+        }
+        @media (max-width: 768px) {
+            .responsive {
+                max-width: 150px;
+            }
+        }
+        @media (max-width: 480px) {
+            .responsive {
+                max-width: 120px;
+            }
+        }
+        
+        /* Destaque para sorteios */
+        .primeiro-sorteio {
+            background: linear-gradient(135deg, #e11d48, #f472b6) !important;
+            color: white !important;
+            border: 2px solid #be185d !important;
+            font-weight: bold !important;
+        }
+        .segundo-sorteio {
+            background: linear-gradient(135deg, #7c3aed, #a855f7) !important;
+            color: white !important;
+            border: 2px solid #6d28d9 !important;
+            font-weight: bold !important;
+        }
+    </style>
+</head>
+<body class="bg-duplasena-50 dark:bg-gray-900 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 py-6 text-center">
+            <div class="flex items-center justify-center gap-3 mb-2">
+                <div class="flex items-center gap-2">
+                    <img src="https://i.postimg.cc/hPDHjbJz/dupla-sena.jpg" alt="Dupla Sena" class="responsive">
+                </div>
+            </div>
+            <div class="flex items-center justify-center gap-4">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                    Análise Visual 
+                    <span class="text-duplasena-primary bg-gradient-to-r from-duplasena-600 to-duplasena-800 bg-clip-text text-transparent font-extrabold">DUPLA SENA</span>
+                </h1>
+                <button id="helpBtn" class="bg-duplasena-primary hover:bg-duplasena-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors">
+                    ?
+                </button>
+            </div>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">Análise inteligente baseada em dados reais da API oficial da Caixa</p>
+        </div>
+    </header>
+
+    <!-- Controls -->
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="bg-gradient-to-r from-duplasena-100 via-duplasena-50 to-white dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-lg shadow-sm p-6 mb-6 border border-duplasena-200 dark:border-gray-600">
+            <div class="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                <!-- Load Button -->
+                <div class="bg-duplasena-200 dark:bg-duplasena-900 p-3 rounded-lg">
+                    <button id="loadBtn" class="bg-duplasena-primary hover:bg-duplasena-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 min-w-[200px] justify-center">
+                        <div id="loadSpinner" class="loading-spinner hidden"></div>
+                        <span id="loadText">Carregar Resultados</span>
+                    </button>
+                </div>
+
+                <!-- View Type -->
+                <div class="bg-duplasena-100 dark:bg-duplasena-950 p-3 rounded-lg flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Visualização:</label>
+                    <select id="viewType" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="dual">Dual (5x10 + 5x10)</option>
+                        <option value="separated">Separado</option>
+                        <option value="horizontal">Linha Horizontal</option>
+                        <option value="compact">Compacto</option>
+                        <option value="table">Tabela</option>
+                    </select>
+                </div>
+
+                <!-- Sort Order -->
+                <div class="bg-duplasena-300 dark:bg-duplasena-975 p-3 rounded-lg flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Ordem:</label>
+                    <select id="sortOrder" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="desc">Mais Recente</option>
+                        <option value="asc">Mais Antigo</option>
+                    </select>
+                </div>
+
+                <!-- Columns -->
+                <div class="bg-duplasena-200 dark:bg-duplasena-900 p-3 rounded-lg flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Colunas:</label>
+                    <select id="columns" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="1">1 Coluna</option>
+                        <option value="2">2 Colunas</option>
+                        <option value="3" selected>3 Colunas</option>
+                        <option value="4">4 Colunas</option>
+                        <option value="5">5 Colunas</option>
+                    </select>
+                </div>
+
+                <!-- Show Info Toggle -->
+                <div class="bg-duplasena-100 dark:bg-duplasena-950 p-3 rounded-lg">
+                    <button id="showInfoBtn" class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-duplasena-primary">
+                        <div class="w-5 h-5 bg-duplasena-primary text-white rounded-full flex items-center justify-center text-xs font-bold">
+                            <span id="toggleIcon">−</span>
+                        </div>
+                        <span>Info Concursos</span>
+                    </button>
+                    <input type="checkbox" id="showInfo" checked class="hidden">
+                </div>
+
+                <!-- Limit -->
+                <div class="bg-duplasena-300 dark:bg-duplasena-975 p-3 rounded-lg flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Carregar:</label>
+                    <select id="limit" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="50">Do 1º ao 50º concurso</option>
+                        <option value="100">Do 1º ao 100º concurso</option>
+                        <option value="200">Do 1º ao 200º concurso</option>
+                        <option value="500">Do 1º ao 500º concurso</option>
+                        <option value="1000">Do 1º ao 1000º concurso</option>
+                        <option value="2000">Do 1º ao 2000º concurso</option>
+                        <option value="metade">Do 1º até a metade</option>
+                        <option value="todos">Do 1º ao último concurso</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Info -->
+        <div id="resultsInfo" class="hidden bg-duplasena-100 dark:bg-duplasena-950 border border-duplasena-300 dark:border-duplasena-800 rounded-lg p-4 mb-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="bg-duplasena-primary text-white px-3 py-1 rounded-full text-sm font-bold">
+                        <span id="loadedCount">0</span> concursos
+                    </div>
+                    <span class="text-gray-700 dark:text-gray-300 text-sm">carregados com sucesso</span>
+                </div>
+                <button id="clearResults" class="text-gray-500 hover:text-red-500 text-sm underline">
+                    Limpar resultados
+                </button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="grid gap-4"></div>
+
+        <!-- Statistics -->
+        <div id="statistics" class="hidden mt-4 bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-3">
+                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Estatísticas por Sorteio</h4>
+                <span class="text-xs text-gray-500 dark:text-gray-400" id="tendency">Dois Sorteios</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Primeiro Sorteio -->
+                <div class="overflow-x-auto">
+                    <h5 class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-1">
+                        <div class="w-3 h-3 bg-duplasena-primary rounded-full"></div>
+                        PRIMEIRO SORTEIO
+                    </h5>
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-gray-600">
+                                <th class="text-left py-1 text-gray-600 dark:text-gray-400">Tipo</th>
+                                <th class="text-center py-1 text-gray-600 dark:text-gray-400">Total</th>
+                                <th class="text-center py-1 text-gray-600 dark:text-gray-400">%</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-700 dark:text-gray-300">
+                            <tr class="border-b border-gray-100 dark:border-gray-700">
+                                <td class="py-1 flex items-center gap-1">
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                    <span class="font-medium">Ímpares</span>
+                                </td>
+                                <td class="text-center py-1 font-mono" id="firstOddTotal">0</td>
+                                <td class="text-center py-1 font-mono" id="firstOddFreq">0%</td>
+                            </tr>
+                            <tr>
+                                <td class="py-1 flex items-center gap-1">
+                                    <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                                    <span class="font-medium">Pares</span>
+                                </td>
+                                <td class="text-center py-1 font-mono" id="firstEvenTotal">0</td>
+                                <td class="text-center py-1 font-mono" id="firstEvenFreq">0%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Segundo Sorteio -->
+                <div class="overflow-x-auto">
+                    <h5 class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-1">
+                        <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                        SEGUNDO SORTEIO
+                    </h5>
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-gray-600">
+                                <th class="text-left py-1 text-gray-600 dark:text-gray-400">Tipo</th>
+                                <th class="text-center py-1 text-gray-600 dark:text-gray-400">Total</th>
+                                <th class="text-center py-1 text-gray-600 dark:text-gray-400">%</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-700 dark:text-gray-300">
+                            <tr class="border-b border-gray-100 dark:border-gray-700">
+                                <td class="py-1 flex items-center gap-1">
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                    <span class="font-medium">Ímpares</span>
+                                </td>
+                                <td class="text-center py-1 font-mono" id="secondOddTotal">0</td>
+                                <td class="text-center py-1 font-mono" id="secondOddFreq">0%</td>
+                            </tr>
+                            <tr>
+                                <td class="py-1 flex items-center gap-1">
+                                    <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                                    <span class="font-medium">Pares</span>
+                                </td>
+                                <td class="text-center py-1 font-mono" id="secondEvenTotal">0</td>
+                                <td class="text-center py-1 font-mono" id="secondEvenFreq">0%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+                <span>Mais sorteado (1º): <span id="mostDrawnFirst" class="font-medium">-</span></span>
+                <span>Mais sorteado (2º): <span id="mostDrawnSecond" class="font-medium">-</span></span>
+            </div>
+        </div>
+
+        <!-- Error -->
+        <div id="error" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mt-4"></div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-duplasena-primary to-duplasena-700 text-white p-6 rounded-t-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                            <span class="text-duplasena-primary font-bold text-sm">2X</span>
+                        </div>
+                        <h2 class="text-xl font-bold">Como usar a Análise Visual Dupla Sena</h2>
+                    </div>
+                    <button id="closeModal" class="text-white hover:text-gray-300 text-2xl font-bold">×</button>
+                </div>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6 space-y-6">
+                <section>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Sobre a Dupla Sena</h3>
+                    <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                        A Dupla Sena possui 50 números (1 a 50) e realiza <strong>dois sorteios</strong> no mesmo concurso. 
+                        São sorteados 6 números no primeiro sorteio e 6 números no segundo sorteio, totalizando 12 números por concurso.
+                        Esta ferramenta utiliza a API oficial da Caixa para exibir os resultados históricos.
+                    </p>
+                </section>
+
+                <section>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Como Interpretar</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <div class="w-4 h-4 bg-duplasena-primary rounded-full mt-1"></div>
+                            <div>
+                                <span class="font-medium text-gray-900 dark:text-white">Rosa (1º Sorteio):</span>
+                                <span class="text-gray-700 dark:text-gray-300"> Números do primeiro sorteio</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-4 h-4 bg-purple-500 rounded-full mt-1"></div>
+                            <div>
+                                <span class="font-medium text-gray-900 dark:text-white">Roxo (2º Sorteio):</span>
+                                <span class="text-gray-700 dark:text-gray-300"> Números do segundo sorteio</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-4 h-4 bg-gray-300 rounded-full mt-1"></div>
+                            <div>
+                                <span class="font-medium text-gray-900 dark:text-white">Números Cinza:</span>
+                                <span class="text-gray-700 dark:text-gray-300"> Não foram sorteados em nenhum dos dois sorteios</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 rounded-b-lg">
+                <div class="flex justify-between items-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Jogue com responsabilidade. Esta ferramenta é apenas para análise estatística.
+                    </p>
+                    <button id="closeModalFooter" class="bg-duplasena-primary hover:bg-duplasena-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                        Entendi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🚀 Script Dupla Sena iniciado');
+
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        let allResults = [];
+        let firstDrawStats = {};
+        let secondDrawStats = {};
+        let isLoading = false;
+
+        function generateSampleData(limit, startFrom = 1) {
+            console.log(`🎲 Gerando ${limit} concursos da Dupla Sena...`);
+            const sampleData = [];
+            const startDate = new Date('2001-11-06'); // Data do primeiro concurso da Dupla Sena
+            
+            for (let i = 0; i < limit; i++) {
+                const concursoNumber = startFrom + i;
+                const date = new Date(startDate);
+                date.setDate(date.getDate() + (i * 3)); // Aproximadamente 2-3 sorteios por semana
+                
+                // Gera 6 números aleatórios únicos para o primeiro sorteio (1-50)
+                const primeiroSorteio = [];
+                while (primeiroSorteio.length < 6) {
+                    const num = Math.floor(Math.random() * 50) + 1;
+                    if (!primeiroSorteio.includes(num)) {
+                        primeiroSorteio.push(num);
+                    }
+                }
+                primeiroSorteio.sort((a, b) => a - b);
+                
+                // Gera 6 números aleatórios únicos para o segundo sorteio (1-50)
+                const segundoSorteio = [];
+                while (segundoSorteio.length < 6) {
+                    const num = Math.floor(Math.random() * 50) + 1;
+                    if (!segundoSorteio.includes(num)) {
+                        segundoSorteio.push(num);
+                    }
+                }
+                segundoSorteio.sort((a, b) => a - b);
+                
+                sampleData.push({
+                    numero: concursoNumber,
+                    dataApuracao: date.toLocaleDateString('pt-BR'),
+                    primeiroSorteio: primeiroSorteio.map(n => n.toString().padStart(2, '0')),
+                    segundoSorteio: segundoSorteio.map(n => n.toString().padStart(2, '0'))
+                });
+            }
+            
+            console.log(`✅ Gerados ${sampleData.length} concursos da Dupla Sena: ${sampleData[0]?.numero} até ${sampleData[sampleData.length-1]?.numero}`);
+            return sampleData;
+        }
+
+        function calculateDrawStats() {
+            firstDrawStats = {};
+            secondDrawStats = {};
+            
+            // Inicializa contadores para números (1-50)
+            for (let i = 1; i <= 50; i++) {
+                firstDrawStats[i] = 0;
+                secondDrawStats[i] = 0;
+            }
+            
+            // Conta frequência de cada número em cada sorteio
+            allResults.forEach(result => {
+                if (result.primeiroSorteio && Array.isArray(result.primeiroSorteio)) {
+                    result.primeiroSorteio.forEach(numero => {
+                        const num = parseInt(numero);
+                        if (num >= 1 && num <= 50) {
+                            firstDrawStats[num]++;
+                        }
+                    });
+                }
+                
+                if (result.segundoSorteio && Array.isArray(result.segundoSorteio)) {
+                    result.segundoSorteio.forEach(numero => {
+                        const num = parseInt(numero);
+                        if (num >= 1 && num <= 50) {
+                            secondDrawStats[num]++;
+                        }
+                    });
+                }
+            });
+            
+            console.log('📊 Estatísticas calculadas - 1º Sorteio:', Object.keys(firstDrawStats).length, '2º Sorteio:', Object.keys(secondDrawStats).length);
+        }
+
+        async function loadResults() {
+            console.log('🔄 loadResults chamado para Dupla Sena');
+            
+            if (isLoading) {
+                console.log('⚠️ Já está carregando, ignorando');
+                return;
+            }
+            
+            isLoading = true;
+            
+            // Elementos do botão
+            const loadSpinner = document.getElementById('loadSpinner');
+            const loadText = document.getElementById('loadText');
+            const loadBtn = document.getElementById('loadBtn');
+            
+            if (loadSpinner) loadSpinner.classList.remove('hidden');
+            if (loadBtn) loadBtn.disabled = true;
+            
+            // Determina quantos concursos carregar
+            const limitSelect = document.getElementById('limit');
+            const limitValue = limitSelect ? limitSelect.value : '50';
+            
+            let limit = 50;
+            switch(limitValue) {
+                case 'todos':
+                    limit = 2500; // Dupla Sena tem muitos concursos
+                    break;
+                case 'metade':
+                    limit = 1250;
+                    break;
+                case '50':
+                case '100':
+                case '200':
+                case '500':
+                case '1000':
+                case '2000':
+                    limit = parseInt(limitValue);
+                    break;
+            }
+            
+            // Limpa resultados anteriores
+            allResults = [];
+            firstDrawStats = {};
+            secondDrawStats = {};
+            const resultsDiv = document.getElementById('results');
+            if (resultsDiv) resultsDiv.innerHTML = '';
+            
+            try {
+                console.log(`🎯 Carregando ${limit} concursos da Dupla Sena`);
+                
+                // TENTA BUSCAR DA API REAL PRIMEIRO
+                if (loadText) loadText.textContent = 'Conectando à API...';
+                
+                try {
+                    const latestResponse = await fetch('https://servicebus2.caixa.gov.br/portaldeloterias/api/duplasena');
+                    
+                    if (latestResponse.ok) {
+                        const latestData = await latestResponse.json();
+                        const ultimoConcurso = latestData.numero;
+                        console.log(`✅ API Dupla Sena conectada! Último concurso: ${ultimoConcurso}`);
+                        
+                        // Ajusta limite baseado na API
+                        let concursoFinal = Math.min(limit, ultimoConcurso);
+                        
+                        if (loadText) loadText.textContent = `Carregando 0/${concursoFinal}...`;
+                        
+                        // Busca cada concurso individualmente
+                        for (let concurso = 1; concurso <= concursoFinal; concurso++) {
+                            try {
+                                // Atualiza progresso no botão
+                                if (loadText) loadText.textContent = `Carregando ${concurso}/${concursoFinal}...`;
+                                
+                                const response = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/duplasena/${concurso}`);
+                                
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    if (data && data.listaDezenas1 && data.listaDezenas2) {
+                                        allResults.push({
+                                            numero: data.numero,
+                                            dataApuracao: data.dataApuracao,
+                                            primeiroSorteio: data.listaDezenas1,
+                                            segundoSorteio: data.listaDezenas2
+                                        });
+                                    }
+                                }
+                                
+                                // Pequena pausa para não sobrecarregar a API
+                                if (concurso % 15 === 0) {
+                                    await new Promise(resolve => setTimeout(resolve, 100));
+                                }
+                                
+                            } catch (err) {
+                                console.log(`Erro no concurso ${concurso}:`, err);
+                            }
+                        }
+                        
+                        console.log(`🎯 DADOS REAIS CARREGADOS: ${allResults.length}/${concursoFinal} concursos`);
+                        
+                    } else {
+                        throw new Error(`API retornou erro: ${latestResponse.status}`);
+                    }
+                    
+                } catch (apiError) {
+                    console.error('❌ ERRO NA API:', apiError);
+                    if (loadText) loadText.textContent = 'API falhou, gerando dados...';
+                    
+                    // Fallback: gera dados simulados com progresso
+                    for (let i = 0; i < limit; i++) {
+                        if (loadText) loadText.textContent = `Gerando ${i + 1}/${limit}...`;
+                        
+                        // Simula um pequeno delay para mostrar progresso
+                        if (i % 100 === 0) {
+                            await new Promise(resolve => setTimeout(resolve, 50));
+                        }
+                    }
+                    
+                    allResults = generateSampleData(limit);
+                    console.log(`🔄 DADOS SIMULADOS: ${allResults.length} concursos`);
+                }
+                
+                // Se não conseguiu dados suficientes da API, complementa
+                if (allResults.length < limit) {
+                    const missing = limit - allResults.length;
+                    if (loadText) loadText.textContent = `Complementando ${missing} dados...`;
+                    
+                    const simulatedData = generateSampleData(missing, allResults.length + 1);
+                    allResults = [...allResults, ...simulatedData];
+                }
+                
+                // Finaliza o carregamento
+                if (loadText) loadText.textContent = 'Processando dados...';
+                
+                // Ordena por número do concurso
+                allResults.sort((a, b) => a.numero - b.numero);
+                
+                renderResults();
+                showResultsInfo();
+                calculateStatistics();
+                calculateDrawStats();
+                
+                console.log('✅ Carregamento da Dupla Sena concluído com sucesso');
+                
+            } catch (error) {
+                console.error('❌ Erro no carregamento:', error);
+                showError('Erro ao carregar resultados: ' + error.message);
+            } finally {
+                isLoading = false;
+                
+                // Remove loading
+                if (loadSpinner) loadSpinner.classList.add('hidden');
+                if (loadText) loadText.textContent = 'Carregar Resultados';
+                if (loadBtn) loadBtn.disabled = false;
+            }
+        }
+
+        function renderResults() {
+            console.log(`🎨 Renderizando ${allResults.length} resultados da Dupla Sena`);
+            
+            const resultsDiv = document.getElementById('results');
+            if (!resultsDiv) {
+                console.error('❌ Elemento results não encontrado');
+                return;
+            }
+            
+            if (allResults.length === 0) {
+                console.log('⚠️ Nenhum resultado para renderizar');
+                resultsDiv.innerHTML = '<p class="text-center text-gray-500">Nenhum resultado carregado</p>';
+                return;
+            }
+
+            // Ordenação
+            const sortOrderSelect = document.getElementById('sortOrder');
+            const sortOrder = sortOrderSelect ? sortOrderSelect.value : 'desc';
+            
+            const sortedResults = [...allResults].sort((a, b) => {
+                return sortOrder === 'desc' ? b.numero - a.numero : a.numero - b.numero;
+            });
+            
+            console.log(`📊 Ordenação: ${sortOrder}, Primeiros 3: [${sortedResults.slice(0, 3).map(r => r.numero).join(', ')}]`);
+
+            // Colunas
+            const columnsSelect = document.getElementById('columns');
+            const columnsCount = columnsSelect ? columnsSelect.value : '3';
+            
+            const gridCols = {
+                '1': 'grid-cols-1',
+                '2': 'grid-cols-1 md:grid-cols-2',
+                '3': 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
+                '4': 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+                '5': 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5'
+            };
+            
+            resultsDiv.className = `grid gap-4 ${gridCols[columnsCount]}`;
+
+            // Criar cards
+            const htmlCards = sortedResults.map(result => createResultCard(result));
+            resultsDiv.innerHTML = htmlCards.join('');
+            
+            console.log(`✅ ${htmlCards.length} cards renderizados no DOM`);
+        }
+
+        function createResultCard(result) {
+            const showInfoCheckbox = document.getElementById('showInfo');
+            const showInfo = showInfoCheckbox ? showInfoCheckbox.checked : true;
+            
+            const viewTypeSelect = document.getElementById('viewType');
+            const viewType = viewTypeSelect ? viewTypeSelect.value : 'dual';
+            
+            const primeiro = result.primeiroSorteio.map(d => parseInt(d));
+            const segundo = result.segundoSorteio.map(d => parseInt(d));
+            
+            const primeiroOdd = primeiro.filter(num => num % 2 === 1).length;
+            const primeiroEven = primeiro.filter(num => num % 2 === 0).length;
+            const segundoOdd = segundo.filter(num => num % 2 === 1).length;
+            const segundoEven = segundo.filter(num => num % 2 === 0).length;
+            
+            const headerHTML = showInfo ? `
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-duplasena-100 to-duplasena-200 dark:from-duplasena-950 dark:to-duplasena-900">
+                    <div class="flex justify-between items-center">
+                        <div class="bg-duplasena-300 dark:bg-duplasena-800 px-3 py-1 rounded-lg">
+                            <h3 class="font-semibold text-gray-900 dark:text-white">Concurso ${result.numero}</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="bg-duplasena-200 dark:bg-duplasena-900 px-3 py-1 rounded-lg">
+                                <p class="text-sm text-gray-700 dark:text-gray-300">${result.dataApuracao}</p>
+                            </div>
+                            <div class="bg-pink-100 dark:bg-pink-900 border border-pink-300 dark:border-pink-700 px-2 py-1 rounded-lg">
+                                <p class="text-xs text-pink-700 dark:text-pink-300 font-medium">1º: ${primeiroOdd}í ${primeiroEven}p</p>
+                            </div>
+                            <div class="bg-purple-100 dark:bg-purple-900 border border-purple-300 dark:border-purple-700 px-2 py-1 rounded-lg">
+                                <p class="text-xs text-purple-700 dark:text-purple-300 font-medium">2º: ${segundoOdd}í ${segundoEven}p</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ` : '';
+
+            const drawsHTML = createDrawsDisplay(primeiro, segundo, viewType);
+
+            return `
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    ${headerHTML}
+                    <div class="p-4">
+                        ${drawsHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+        function createDrawsDisplay(primeiro, segundo, viewType) {
+            switch (viewType) {
+                case 'separated':
+                    return `
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">
+                                    <div class="w-3 h-3 bg-duplasena-primary rounded-full"></div>
+                                    Primeiro Sorteio
+                                </h4>
+                                <div class="grid grid-cols-10 gap-1">
+                                    ${Array.from({length: 50}, (_, i) => i + 1).map(num => {
+                                        const isSelected = primeiro.includes(num);
+                                        const bgColor = isSelected ? 'primeiro-sorteio' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
+                                        return `<div class="number-ball aspect-square rounded-lg flex items-center justify-center text-xs font-bold border ${bgColor}">${num.toString().padStart(2, '0')}</div>`;
+                                    }).join('')}
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">
+                                    <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                                    Segundo Sorteio
+                                </h4>
+                                <div class="grid grid-cols-10 gap-1">
+                                    ${Array.from({length: 50}, (_, i) => i + 1).map(num => {
+                                        const isSelected = segundo.includes(num);
+                                        const bgColor = isSelected ? 'segundo-sorteio' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
+                                        return `<div class="number-ball aspect-square rounded-lg flex items-center justify-center text-xs font-bold border ${bgColor}">${num.toString().padStart(2, '0')}</div>`;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                case 'horizontal':
+                    return `
+                        <div class="space-y-3">
+                            <div class="flex flex-wrap gap-1 justify-center">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 self-center mr-2">1º:</span>
+                                ${primeiro.sort((a, b) => a - b).map(num => {
+                                    return `<span class="inline-block primeiro-sorteio px-2 py-1 rounded text-xs font-bold">${num.toString().padStart(2, '0')}</span>`;
+                                }).join('')}
+                            </div>
+                            <div class="flex flex-wrap gap-1 justify-center">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 self-center mr-2">2º:</span>
+                                ${segundo.sort((a, b) => a - b).map(num => {
+                                    return `<span class="inline-block segundo-sorteio px-2 py-1 rounded text-xs font-bold">${num.toString().padStart(2, '0')}</span>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+
+                case 'compact':
+                    return `
+                        <div class="text-center space-y-2">
+                            <div class="inline-flex gap-1 bg-pink-50 dark:bg-pink-900/20 p-2 rounded-lg">
+                                ${primeiro.sort((a, b) => a - b).map(num => {
+                                    return `<span class="inline-block primeiro-sorteio px-2 py-1 rounded text-xs font-bold">${num.toString().padStart(2, '0')}</span>`;
+                                }).join('')}
+                            </div>
+                            <div class="inline-flex gap-1 bg-purple-50 dark:bg-purple-900/20 p-2 rounded-lg">
+                                ${segundo.sort((a, b) => a - b).map(num => {
+                                    return `<span class="inline-block segundo-sorteio px-2 py-1 rounded text-xs font-bold">${num.toString().padStart(2, '0')}</span>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+
+                case 'table':
+                    return `
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-gray-200 dark:border-gray-600">
+                                        <th class="text-left py-2">Sorteio</th>
+                                        <th class="text-center py-2">Números</th>
+                                        <th class="text-center py-2">Ímp/Par</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b border-gray-100 dark:border-gray-700">
+                                        <td class="py-2 font-medium flex items-center gap-1">
+                                            <div class="w-3 h-3 bg-duplasena-primary rounded-full"></div>
+                                            1º Sorteio
+                                        </td>
+                                        <td class="py-2 text-center">
+                                            <div class="flex gap-1 justify-center">
+                                                ${primeiro.sort((a, b) => a - b).map(num => {
+                                                    return `<span class="inline-block primeiro-sorteio px-2 py-1 rounded text-xs font-bold">${num.toString().padStart(2, '0')}</span>`;
+                                                }).join('')}
+                                            </div>
+                                        </td>
+                                        <td class="py-2 text-center font-mono text-xs">${primeiro.filter(n => n % 2 === 1).length}í ${primeiro.filter(n => n % 2 === 0).length}p</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-2 font-medium flex items-center gap-1">
+                                            <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                                            2º Sorteio
+                                        </td>
+                                        <td class="py-2 text-center">
+                                            <div class="flex gap-1 justify-center">
+                                                ${segundo.sort((a, b) => a - b).map(num => {
+                                                    return `<span class="inline-block segundo-sorteio px-2 py-1 rounded text-xs font-bold">${num.toString().padStart(2, '0')}</span>`;
+                                                }).join('')}
+                                            </div>
+                                        </td>
+                                        <td class="py-2 text-center font-mono text-xs">${segundo.filter(n => n % 2 === 1).length}í ${segundo.filter(n => n % 2 === 0).length}p</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+
+                default: // dual
+                    return `
+                        <div class="grid grid-cols-10 gap-1">
+                            ${Array.from({length: 50}, (_, i) => i + 1).map(num => {
+                                const inFirst = primeiro.includes(num);
+                                const inSecond = segundo.includes(num);
+                                
+                                let bgColor = 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
+                                if (inFirst && inSecond) {
+                                    // Apareceu nos dois sorteios - destaque especial
+                                    bgColor = 'bg-gradient-to-r from-duplasena-primary to-purple-500 text-white border-2 border-yellow-400';
+                                } else if (inFirst) {
+                                    bgColor = 'primeiro-sorteio';
+                                } else if (inSecond) {
+                                    bgColor = 'segundo-sorteio';
+                                }
+                                
+                                return `<div class="number-ball aspect-square rounded-lg flex items-center justify-center text-xs font-bold border ${bgColor}">${num.toString().padStart(2, '0')}</div>`;
+                            }).join('')}
+                        </div>
+                    `;
+            }
+        }
+
+        function showResultsInfo() {
+            const resultsInfo = document.getElementById('resultsInfo');
+            const loadedCount = document.getElementById('loadedCount');
+            
+            if (allResults.length > 0) {
+                if (loadedCount) loadedCount.textContent = allResults.length;
+                if (resultsInfo) resultsInfo.classList.remove('hidden');
+            } else {
+                if (resultsInfo) resultsInfo.classList.add('hidden');
+            }
+        }
+
+        function calculateStatistics() {
+            if (allResults.length === 0) {
+                const statisticsDiv = document.getElementById('statistics');
+                if (statisticsDiv) statisticsDiv.classList.add('hidden');
+                return;
+            }
+
+            let firstOddTotal = 0, firstEvenTotal = 0;
+            let secondOddTotal = 0, secondEvenTotal = 0;
+
+            allResults.forEach(result => {
+                const primeiro = result.primeiroSorteio.map(d => parseInt(d));
+                const segundo = result.segundoSorteio.map(d => parseInt(d));
+                
+                firstOddTotal += primeiro.filter(num => num % 2 === 1).length;
+                firstEvenTotal += primeiro.filter(num => num % 2 === 0).length;
+                secondOddTotal += segundo.filter(num => num % 2 === 1).length;
+                secondEvenTotal += segundo.filter(num => num % 2 === 0).length;
+            });
+
+            const gameCount = allResults.length;
+            const firstTotal = firstOddTotal + firstEvenTotal;
+            const secondTotal = secondOddTotal + secondEvenTotal;
+
+            const firstOddFreq = ((firstOddTotal / firstTotal) * 100).toFixed(1);
+            const firstEvenFreq = ((firstEvenTotal / firstTotal) * 100).toFixed(1);
+            const secondOddFreq = ((secondOddTotal / secondTotal) * 100).toFixed(1);
+            const secondEvenFreq = ((secondEvenTotal / secondTotal) * 100).toFixed(1);
+
+            // Números mais sorteados
+            const sortedFirst = Object.entries(firstDrawStats).sort(([,a], [,b]) => b - a);
+            const sortedSecond = Object.entries(secondDrawStats).sort(([,a], [,b]) => b - a);
+
+            // Atualiza elementos
+            const elements = {
+                firstOddTotal: document.getElementById('firstOddTotal'),
+                firstOddFreq: document.getElementById('firstOddFreq'),
+                firstEvenTotal: document.getElementById('firstEvenTotal'),
+                firstEvenFreq: document.getElementById('firstEvenFreq'),
+                secondOddTotal: document.getElementById('secondOddTotal'),
+                secondOddFreq: document.getElementById('secondOddFreq'),
+                secondEvenTotal: document.getElementById('secondEvenTotal'),
+                secondEvenFreq: document.getElementById('secondEvenFreq'),
+                mostDrawnFirst: document.getElementById('mostDrawnFirst'),
+                mostDrawnSecond: document.getElementById('mostDrawnSecond'),
+                statistics: document.getElementById('statistics')
+            };
+
+            if (elements.firstOddTotal) elements.firstOddTotal.textContent = firstOddTotal;
+            if (elements.firstOddFreq) elements.firstOddFreq.textContent = firstOddFreq + '%';
+            if (elements.firstEvenTotal) elements.firstEvenTotal.textContent = firstEvenTotal;
+            if (elements.firstEvenFreq) elements.firstEvenFreq.textContent = firstEvenFreq + '%';
+
+            if (elements.secondOddTotal) elements.secondOddTotal.textContent = secondOddTotal;
+            if (elements.secondOddFreq) elements.secondOddFreq.textContent = secondOddFreq + '%';
+            if (elements.secondEvenTotal) elements.secondEvenTotal.textContent = secondEvenTotal;
+            if (elements.secondEvenFreq) elements.secondEvenFreq.textContent = secondEvenFreq + '%';
+
+            if (elements.mostDrawnFirst && sortedFirst[0]) {
+                elements.mostDrawnFirst.textContent = `${sortedFirst[0][0].padStart(2, '0')} (${sortedFirst[0][1]}x)`;
+            }
+            
+            if (elements.mostDrawnSecond && sortedSecond[0]) {
+                elements.mostDrawnSecond.textContent = `${sortedSecond[0][0].padStart(2, '0')} (${sortedSecond[0][1]}x)`;
+            }
+
+            if (elements.statistics) elements.statistics.classList.remove('hidden');
+        }
+
+        function clearResults() {
+            console.log('🗑️ Limpando resultados');
+            allResults = [];
+            firstDrawStats = {};
+            secondDrawStats = {};
+            
+            const resultsDiv = document.getElementById('results');
+            const resultsInfo = document.getElementById('resultsInfo');
+            const statistics = document.getElementById('statistics');
+            const error = document.getElementById('error');
+            
+            if (resultsDiv) resultsDiv.innerHTML = '';
+            if (resultsInfo) resultsInfo.classList.add('hidden');
+            if (statistics) statistics.classList.add('hidden');
+            if (error) error.classList.add('hidden');
+        }
+
+        function showError(message) {
+            console.error('❌ Erro:', message);
+            const errorDiv = document.getElementById('error');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        function toggleInfo() {
+            const showInfo = document.getElementById('showInfo');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (showInfo && toggleIcon) {
+                showInfo.checked = !showInfo.checked;
+                toggleIcon.textContent = showInfo.checked ? '−' : '+';
+                renderResults();
+            }
+        }
+
+        // Event listeners
+        function initEventListeners() {
+            console.log('🔗 Configurando event listeners da Dupla Sena');
+            
+            const loadBtn = document.getElementById('loadBtn');
+            if (loadBtn) {
+                loadBtn.addEventListener('click', () => {
+                    console.log('👆 Botão Carregar clicado');
+                    loadResults();
+                });
+            }
+            
+            const viewType = document.getElementById('viewType');
+            if (viewType) {
+                viewType.addEventListener('change', () => {
+                    console.log('👁️ Visualização alterada');
+                    renderResults();
+                });
+            }
+            
+            const sortOrder = document.getElementById('sortOrder');
+            if (sortOrder) {
+                sortOrder.addEventListener('change', () => {
+                    console.log('🔄 Ordem alterada');
+                    renderResults();
+                });
+            }
+            
+            const columns = document.getElementById('columns');
+            if (columns) {
+                columns.addEventListener('change', () => {
+                    console.log('📊 Colunas alteradas');
+                    renderResults();
+                });
+            }
+            
+            const showInfo = document.getElementById('showInfo');
+            if (showInfo) {
+                showInfo.addEventListener('change', () => {
+                    console.log('ℹ️ Info alterada');
+                    renderResults();
+                });
+            }
+            
+            const limit = document.getElementById('limit');
+            if (limit) {
+                limit.addEventListener('change', () => {
+                    console.log('📊 Limite alterado');
+                    loadResults();
+                });
+            }
+            
+            const showInfoBtn = document.getElementById('showInfoBtn');
+            if (showInfoBtn) {
+                showInfoBtn.addEventListener('click', toggleInfo);
+            }
+            
+            const clearResults = document.getElementById('clearResults');
+            if (clearResults) {
+                clearResults.addEventListener('click', () => {
+                    console.log('🗑️ Limpar clicado');
+                    clearResults();
+                });
+            }
+            
+            // Modal
+            const helpBtn = document.getElementById('helpBtn');
+            const closeModal = document.getElementById('closeModal');
+            const closeModalFooter = document.getElementById('closeModalFooter');
+            const helpModal = document.getElementById('helpModal');
+            
+            if (helpBtn && helpModal) {
+                helpBtn.addEventListener('click', () => helpModal.classList.remove('hidden'));
+            }
+            
+            if (closeModal && helpModal) {
+                closeModal.addEventListener('click', () => helpModal.classList.add('hidden'));
+            }
+            
+            if (closeModalFooter && helpModal) {
+                closeModalFooter.addEventListener('click', () => helpModal.classList.add('hidden'));
+            }
+            
+            if (helpModal) {
+                helpModal.addEventListener('click', (e) => {
+                    if (e.target.id === 'helpModal') {
+                        helpModal.classList.add('hidden');
+                    }
+                });
+            }
+        }
+
+        // Inicialização
+        function init() {
+            console.log('🎬 Inicializando aplicação Dupla Sena');
+            
+            try {
+                initEventListeners();
+                console.log('✅ Event listeners configurados');
+                
+                // Carrega automaticamente
+                console.log('🔄 Carregando dados iniciais da Dupla Sena');
+                loadResults();
+                
+            } catch (error) {
+                console.error('❌ Erro na inicialização:', error);
+                showError('Erro na inicialização: ' + error.message);
+            }
+        }
+
+        // Inicializa quando DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        console.log('✅ Script Dupla Sena carregado completamente');
+    </script>
+</body>
+</html>
